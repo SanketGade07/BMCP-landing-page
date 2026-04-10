@@ -8,6 +8,7 @@ const D = "#1A1A1A";
 const L = "#FDF0EF";
 const G = "#6B7280";
 const B = "#E5E7EB";
+const WA = "https://wa.me/919333749333";
 
 function useFadeIn() {
   const ref = useRef<HTMLElement>(null);
@@ -91,7 +92,7 @@ function VenueCard({ v }: { v: Venue }) {
           cursor: "pointer", fontFamily: "var(--font-dm-sans), sans-serif", 
           transition: "all 0.2s ease",
           flexShrink: 0
-        }} onMouseEnter={e => { e.currentTarget.style.background = R; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = R; }}>
+        }} onMouseEnter={e => { e.currentTarget.style.background = R; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = R; }} onClick={() => window.open(WA, '_blank')}>
           Get Venue Options →
         </button>
       </div>
@@ -428,7 +429,7 @@ export default function BMCPLanding() {
               </div>
               <a href="tel:+919333749333" style={{ fontSize: 13.5, color: D, textDecoration: "none", fontWeight: 700, letterSpacing: "0.2px" }}>+91 9333 74 9333</a>
             </div>
-            <button className="nav-actions" style={{ background: R, color: "#fff", border: "none", borderRadius: 7, padding: "10px 22px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Get Started →</button>
+            <button className="nav-actions" onClick={() => window.open(WA, '_blank')} style={{ background: R, color: "#fff", border: "none", borderRadius: 7, padding: "10px 22px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Get Started →</button>
             <button className="hamburger-btn" onClick={() => setMenuOpen(!menuOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 8, flexDirection: "column", gap: 5, alignItems: "center", justifyContent: "center" }}>
               <span style={{ display: "block", width: 22, height: 2, background: D, borderRadius: 2, transition: "all 0.3s", transform: menuOpen ? "rotate(45deg) translate(5px, 5px)" : "none" }} />
               <span style={{ display: "block", width: 22, height: 2, background: D, borderRadius: 2, transition: "all 0.3s", opacity: menuOpen ? 0 : 1 }} />
@@ -451,7 +452,7 @@ export default function BMCPLanding() {
             <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)} style={{ fontSize: 28, fontWeight: 700, color: D, textDecoration: "none", padding: "24px 0", width: "80%", textAlign: "center", borderBottom: `1px solid ${B}`, animation: `mobileMenuFade 0.5s ${0.1 * (i + 1)}s both`, fontFamily: "var(--font-playfair), serif" }}>{link.name}</a>
           ))}
           <div style={{ marginTop: 48, animation: "mobileMenuFade 0.5s 0.5s both" }}>
-            <button onClick={() => setMenuOpen(false)} style={{ background: R, color: "#fff", border: "none", borderRadius: 12, padding: "18px 52px", fontSize: 17, fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-dm-sans), sans-serif" }}>Get Started →</button>
+            <button onClick={() => { setMenuOpen(false); window.open(WA, '_blank'); }} style={{ background: R, color: "#fff", border: "none", borderRadius: 12, padding: "18px 52px", fontSize: 17, fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-dm-sans), sans-serif" }}>Get Started →</button>
           </div>
           <a href="tel:+919333749333" style={{ marginTop: 28, fontSize: 16, color: G, textDecoration: "none", animation: "mobileMenuFade 0.5s 0.6s both", display: "flex", alignItems: "center", gap: 8 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={R} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
@@ -872,7 +873,7 @@ export default function BMCPLanding() {
             Shortlist and finalize everything in 30 minutes.
           </p>
           
-          <button style={{ background: R, color: "#fff", border: "none", borderRadius: 12, padding: "20px 52px", fontSize: 18, fontWeight: 800, cursor: "pointer", fontFamily: "var(--font-dm-sans), sans-serif", boxShadow: "0 12px 30px rgba(192,57,43,0.3)", transition: "transform 0.2s" }} onMouseEnter={e => e.currentTarget.style.transform = "translateY(-3px)"} onMouseLeave={e => e.currentTarget.style.transform = "none"}>
+          <button onClick={() => window.open(WA, '_blank')} style={{ background: R, color: "#fff", border: "none", borderRadius: 12, padding: "20px 52px", fontSize: 18, fontWeight: 800, cursor: "pointer", fontFamily: "var(--font-dm-sans), sans-serif", boxShadow: "0 12px 30px rgba(192,57,43,0.3)", transition: "transform 0.2s" }} onMouseEnter={e => e.currentTarget.style.transform = "translateY(-3px)"} onMouseLeave={e => e.currentTarget.style.transform = "none"}>
             GET VENUE OPTIONS FREE →
           </button>
           
