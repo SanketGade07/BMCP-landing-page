@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import useGeoLocation from "../hooks/useGeoLocation";
 
 const R = "#80281F";
 const D = "#1A1A1A";
@@ -24,8 +25,8 @@ function useFadeIn() {
 const Sec = ({ children, bg = "transparent", id, style }: { children: React.ReactNode; bg?: string; id?: string, style?: any }) => {
   const f = useFadeIn();
   return (
-    <section ref={f.ref as React.RefObject<HTMLElement>} id={id} className="section-pad" style={{ ...f.style, background: bg, padding: "50px 24px", ...style }}>
-      <div style={{ maxWidth: 1140, margin: "0 auto" }}>{children}</div>
+    <section ref={f.ref as React.RefObject<HTMLElement>} id={id} className="section-pad" style={{ ...f.style, background: bg, padding: "32px clamp(100px, 8vw, 200px)", ...style }}>
+      <div style={{ width: "100%" }}>{children}</div>
     </section>
   );
 };
@@ -99,8 +100,51 @@ function VenueCard({ v }: { v: Venue }) {
 }
 
 export default function BMCPLanding() {
-  const [formData, setFormData] = useState({ event: "", location: "", date: "", whatsapp: true });
+  const MUMBAI_AREAS = ["Andheri", "BKC", "Lower Parel", "Powai", "Bandra", "Goregaon", "Navi Mumbai", "Thane", "Malad", "Vikhroli", "Worli", "Other"];
+
+  const [formData, setFormData] = useState({ event: "", city: "Mumbai", area: "", date: "", name: "", phone: "", whatsapp: true });
+  const [formStep, setFormStep] = useState<1 | 2>(1);
+  const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [formMsg, setFormMsg] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const userGeo = useGeoLocation();
+
+  const handleStep1 = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormStep(2);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormStatus('submitting');
+    setFormMsg('');
+    try {
+      const res = await fetch('/api/submit-form', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          location: `${formData.area}, ${formData.city}`,
+          userLocation: userGeo ? `${userGeo.city}, ${userGeo.region}, ${userGeo.country}` : 'Unknown',
+          userPincode: userGeo ? userGeo.pincode : 'Unknown',
+          userIp: userGeo ? userGeo.ip : 'Unknown',
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setFormStatus('success');
+        setFormMsg(data.message || 'Enquiry submitted! We will contact you within 30 minutes.');
+        setFormData({ event: "", city: "Mumbai", area: "", date: "", name: "", phone: "", whatsapp: true });
+        setFormStep(1);
+      } else {
+        setFormStatus('error');
+        setFormMsg(data.message || 'Something went wrong. Please try again.');
+      }
+    } catch {
+      setFormStatus('error');
+      setFormMsg('Network error. Please try again or call us directly.');
+    }
+  };
 
   const venues: Venue[] = [
     { name: "Lounges & Clubs", img: "/images/687e0608c0d8f.jpg", tags: ["DJ & Music", "Bar Setup"], desc: "High-energy venues with DJ, bar, and dance floor — ideal for team parties, R&R nights, and celebrations.", capacity: "30–150 guests" },
@@ -118,8 +162,8 @@ export default function BMCPLanding() {
         @media (max-width: 768px) {
           .nav-links, .nav-actions { display: none !important; }
           .hamburger-btn { display: flex !important; }
-          .section-pad { padding: 36px 16px !important; }
-          .hero-section { padding: 40px 0 50px !important; }
+          .section-pad { padding: 24px 16px !important; }
+          .hero-section { min-height: auto !important; padding: 24px 0 30px !important; }
           .hero-container { gap: 28px !important; }
           .hero-badges { flex-wrap: wrap !important; gap: 10px !important; }
 
@@ -356,8 +400,8 @@ export default function BMCPLanding() {
       `}</style>
 
       {/* NAV */}
-      <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(255,255,255,0.97)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${B}`, padding: "12px 24px" }}>
-        <div style={{ maxWidth: 1120, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(255,255,255,0.97)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${B}`, padding: "12px clamp(100px, 8vw, 200px)" }}>
+        <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <div style={{ width: 42, height: 42, overflow: "hidden", display: "flex", alignItems: "center" }}>
               <img src="/images/logo-lg.png" alt="" style={{ height: 42, width: "auto", maxWidth: "none", objectFit: "cover", objectPosition: "left" }} />
@@ -421,22 +465,25 @@ export default function BMCPLanding() {
         background: `linear-gradient(RGBA(0, 0, 0, 0.4), RGBA(0, 0, 0, 0.4)), url('/images/home_banner.png')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
-        padding: "80px 0 100px",
+        minHeight: "calc(100vh - 60px)",
+        display: "flex",
+        alignItems: "center",
+        padding: "28px 0",
         position: "relative",
         overflow: "hidden"
       }}>
         <div style={{ position: "absolute", top: -120, right: -80, width: 420, height: 420, background: `radial-gradient(circle, rgba(192,57,43,0.12) 0%, transparent 70%)`, borderRadius: "50%" }} />
-        <div className="hero-container" style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px", display: "flex", gap: 48, alignItems: "center", flexWrap: "wrap" }}>
+        <div className="hero-container" style={{ width: "100%", padding: "0 clamp(100px, 8vw, 200px)", display: "flex", gap: 32, alignItems: "center", flexWrap: "wrap", boxSizing: "border-box" }}>
           <div style={{ flex: "1 1 520px" }}>
             <Badge text="Mumbai's #1 Corporate Party Platform" />
-            <h1 style={{ fontFamily: "var(--font-playfair), serif", fontSize: "clamp(30px, 4.5vw, 46px)", fontWeight: 700, color: "#fff", lineHeight: 1.18, margin: "18px 0 14px" }}>
+            <h1 style={{ fontFamily: "var(--font-playfair), serif", fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 700, color: "#fff", lineHeight: 1.18, margin: "12px 0 10px" }}>
               Corporate Party in Mumbai?{" "}
               <span style={{ color: "#FF5252" }}>Get Venue Options in 30 Minutes.</span>
             </h1>
-            <p style={{ fontSize: 17, color: "#E0E0E0", lineHeight: 1.65, margin: "0 0 28px", maxWidth: 500 }}>
+            <p style={{ fontSize: 15, color: "#E0E0E0", lineHeight: 1.55, margin: "0 0 16px", maxWidth: 500 }}>
               Tell us your team size, budget, and date. We shortlist the best lounges, banquets, and party venues in Mumbai — so you don't have to call 20 places.
             </p>
-            <div className="hero-badges" style={{ display: "flex", gap: 18, marginTop: 24, alignItems: "center" }}>
+            <div className="hero-badges" style={{ display: "flex", gap: 14, marginTop: 12, alignItems: "center" }}>
               {[
                 { label: "500+ Companies", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> },
                 { label: "30-Min Turnaround", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> },
@@ -451,36 +498,121 @@ export default function BMCPLanding() {
             </div>
           </div>
           {/* Form */}
-          <div style={{ flex: "1 1 380px", background: "#fff", borderRadius: 16, padding: 32, boxShadow: "0 24px 48px rgba(0,0,0,0.15)" }}>
-            <h3 style={{ margin: "0 0 4px", fontSize: 19, fontWeight: 700, color: D }}>Get Venue Options Free</h3>
-            <p style={{ margin: "0 0 22px", fontSize: 13, color: G }}>Free for HR & Admin teams. Options within 30 minutes.</p>
-            {(
-              [
-                { label: "Event / Occasion", placeholder: "e.g. Annual Office Party", key: "event" },
-                { label: "Preferred Location", placeholder: "e.g. Andheri, BKC, Powai", key: "location" },
-                { label: "Event Date", placeholder: "Select date", key: "date", type: "date" },
-              ] as { label: string; placeholder: string; key: "event" | "location" | "date"; type?: string }[]
-            ).map(f => (
-              <div key={f.key} style={{ marginBottom: 14 }}>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: D, marginBottom: 5 }}>{f.label} *</label>
-                <input type={f.type || "text"} placeholder={f.placeholder} value={formData[f.key]} onChange={e => setFormData({ ...formData, [f.key]: e.target.value })} style={{ width: "100%", padding: "11px 13px", border: `1px solid ${B}`, borderRadius: 8, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "var(--font-dm-sans), sans-serif" }} onFocus={e => e.target.style.borderColor = R} onBlur={e => e.target.style.borderColor = B} />
+          <div style={{ flex: "1 1 360px", background: "#fff", borderRadius: 14, padding: "22px 20px", boxShadow: "0 24px 48px rgba(0,0,0,0.15)" }}>
+            {/* Step indicator */}
+            {formStatus !== 'success' && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
+                {[1, 2].map(s => (
+                  <div key={s} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ width: 22, height: 22, borderRadius: "50%", background: formStep >= s ? R : B, color: formStep >= s ? "#fff" : G, fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.3s" }}>{s}</div>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: formStep >= s ? D : G }}>{s === 1 ? "Event Details" : "Your Contact"}</span>
+                    {s === 1 && <div style={{ width: 28, height: 1, background: formStep === 2 ? R : B, marginLeft: 2, transition: "background 0.3s" }} />}
+                  </div>
+                ))}
               </div>
-            ))}
-            <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: G, marginBottom: 18, cursor: "pointer" }}>
-              <input type="checkbox" checked={formData.whatsapp} onChange={e => setFormData({ ...formData, whatsapp: e.target.checked })} style={{ accentColor: R }} />
-              Send me venue details on WhatsApp
-            </label>
-            <button style={{ width: "100%", padding: "13px 0", background: R, color: "#fff", border: "none", borderRadius: 8, fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-dm-sans), sans-serif", boxShadow: "0 4px 14px rgba(192,57,43,0.2)" }}>
-              NEXT STEPS →
-            </button>
-            <p style={{ fontSize: 11, color: "#999", textAlign: "center", margin: "10px 0 0" }}>By clicking, you accept our Terms & Conditions</p>
+            )}
+
+            {formStatus === 'success' ? (
+              <div style={{ textAlign: "center", padding: "28px 0" }}>
+                <div style={{ width: 60, height: 60, background: "#F0FDF4", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px" }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <h3 style={{ margin: "0 0 8px", fontSize: 19, fontWeight: 700, color: D }}>Request Received!</h3>
+                <p style={{ fontSize: 13.5, color: G, lineHeight: 1.6, margin: "0 0 22px" }}>{formMsg}</p>
+                <button onClick={() => { setFormStatus('idle'); setFormStep(1); }} style={{ background: "none", color: R, border: `1px solid ${R}`, borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Submit Another</button>
+              </div>
+
+            ) : formStep === 1 ? (
+              /* ── STEP 1: Event details ── */
+              <form onSubmit={handleStep1}>
+                <h3 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 700, color: D }}>Get Venue Options Free</h3>
+                <p style={{ margin: "0 0 14px", fontSize: 12, color: G }}>Free for HR & Admin teams. Options within 30 minutes.</p>
+
+                {/* Event / Occasion */}
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: D, marginBottom: 4 }}>Event / Occasion *</label>
+                  <input required type="text" placeholder="e.g. Annual Office Party, Team Outing" value={formData.event} onChange={e => setFormData({ ...formData, event: e.target.value })} style={{ width: "100%", padding: "9px 12px", border: `1px solid ${B}`, borderRadius: 7, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "var(--font-dm-sans), sans-serif" }} onFocus={e => e.target.style.borderColor = R} onBlur={e => e.target.style.borderColor = B} />
+                </div>
+
+                {/* City — pre-selected Mumbai */}
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: D, marginBottom: 4 }}>City</label>
+                  <div style={{ position: "relative" }}>
+                    <input readOnly value="Mumbai" style={{ width: "100%", padding: "9px 12px", border: `1px solid ${B}`, borderRadius: 7, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "var(--font-dm-sans), sans-serif", background: "#FAFAFA", color: D, cursor: "default" }} />
+                    <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: "#16A34A", fontWeight: 700 }}>✓ Mumbai</span>
+                  </div>
+                </div>
+
+                {/* Preferred Area — dropdown */}
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: D, marginBottom: 4 }}>Preferred Area *</label>
+                  <select required value={formData.area} onChange={e => setFormData({ ...formData, area: e.target.value })} style={{ width: "100%", padding: "9px 12px", border: `1px solid ${B}`, borderRadius: 7, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "var(--font-dm-sans), sans-serif", background: "#fff", color: formData.area ? D : G, appearance: "none", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }} onFocus={e => e.target.style.borderColor = R} onBlur={e => e.target.style.borderColor = B}>
+                    <option value="" disabled>Select area in Mumbai</option>
+                    {MUMBAI_AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                </div>
+
+                {/* Event Date */}
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: D, marginBottom: 4 }}>Event Date</label>
+                  <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} style={{ width: "100%", padding: "9px 12px", border: `1px solid ${B}`, borderRadius: 7, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "var(--font-dm-sans), sans-serif", color: formData.date ? D : G }} onFocus={e => e.target.style.borderColor = R} onBlur={e => e.target.style.borderColor = B} />
+                </div>
+
+                <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 12, color: G, marginBottom: 14, cursor: "pointer" }}>
+                  <input type="checkbox" checked={formData.whatsapp} onChange={e => setFormData({ ...formData, whatsapp: e.target.checked })} style={{ accentColor: R }} />
+                  Send me venue details on WhatsApp
+                </label>
+
+                <button type="submit" style={{ width: "100%", padding: "11px 0", background: R, color: "#fff", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-dm-sans), sans-serif", boxShadow: "0 4px 14px rgba(192,57,43,0.2)" }}>
+                  NEXT STEPS →
+                </button>
+                <p style={{ fontSize: 10, color: "#999", textAlign: "center", margin: "6px 0 0" }}>Free service · No spam · No obligations</p>
+              </form>
+
+            ) : (
+              /* ── STEP 2: Contact details ── */
+              <form onSubmit={handleSubmit}>
+                <h3 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 700, color: D }}>Almost there!</h3>
+                <p style={{ margin: "0 0 4px", fontSize: 12, color: G }}>Where should we send the venue options?</p>
+
+                {/* Summary pill */}
+                <div style={{ background: L, border: `1px solid ${B}`, borderRadius: 8, padding: "8px 12px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 12, color: D, fontWeight: 600 }}>📍 {formData.area}, {formData.city} · {formData.event}</span>
+                  <button type="button" onClick={() => setFormStep(1)} style={{ background: "none", border: "none", color: R, fontSize: 11, fontWeight: 700, cursor: "pointer", padding: 0 }}>Edit</button>
+                </div>
+
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: D, marginBottom: 4 }}>Your Name *</label>
+                  <input required type="text" placeholder="e.g. Priya Sharma" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={{ width: "100%", padding: "9px 12px", border: `1px solid ${B}`, borderRadius: 7, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "var(--font-dm-sans), sans-serif" }} onFocus={e => e.target.style.borderColor = R} onBlur={e => e.target.style.borderColor = B} />
+                </div>
+
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: D, marginBottom: 4 }}>Phone / WhatsApp *</label>
+                  <input required type="tel" placeholder="+91 98765 43210" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} style={{ width: "100%", padding: "9px 12px", border: `1px solid ${B}`, borderRadius: 7, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "var(--font-dm-sans), sans-serif" }} onFocus={e => e.target.style.borderColor = R} onBlur={e => e.target.style.borderColor = B} />
+                </div>
+
+                <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 12, color: G, marginBottom: 12, cursor: "pointer" }}>
+                  <input type="checkbox" checked={formData.whatsapp} onChange={e => setFormData({ ...formData, whatsapp: e.target.checked })} style={{ accentColor: R }} />
+                  Send venue options on WhatsApp
+                </label>
+
+                {formStatus === 'error' && (
+                  <p style={{ fontSize: 12, color: "#DC2626", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 6, padding: "9px 12px", margin: "0 0 10px" }}>{formMsg}</p>
+                )}
+
+                <button type="submit" disabled={formStatus === 'submitting'} style={{ width: "100%", padding: "11px 0", background: formStatus === 'submitting' ? "#aaa" : R, color: "#fff", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: formStatus === 'submitting' ? "not-allowed" : "pointer", fontFamily: "var(--font-dm-sans), sans-serif", boxShadow: "0 4px 14px rgba(192,57,43,0.2)" }}>
+                  {formStatus === 'submitting' ? 'Sending...' : 'GET VENUE OPTIONS FREE →'}
+                </button>
+                <p style={{ fontSize: 10, color: "#999", textAlign: "center", margin: "6px 0 0" }}>By clicking, you accept our Terms & Conditions</p>
+              </form>
+            )}
           </div>
         </div>
       </section>
 
       {/* ===== 2. WHY CHOOSE US ===== */}
       <Sec bg="#FAFAFA" id="why-us">
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
           <h2 style={{ fontFamily: "var(--font-playfair), serif", fontSize: 30, margin: "0 0 8px" }}>Why HR Teams Choose <span style={{ color: R }}>BookMyCorporateParty</span></h2>
           <p style={{ fontSize: 15, color: G, maxWidth: 480, margin: "0 auto" }}>Corporate-only. Curated. Handled end-to-end.</p>
         </div>
@@ -491,7 +623,7 @@ export default function BMCPLanding() {
             { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>, title: "Negotiated Rates", desc: "We negotiate directly. Better pricing than booking on your own." },
             { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>, title: "Full Coordination", desc: "DJ, food, decor, branding, activities — one contact, start to finish." },
           ].map((b, i) => (
-            <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "28px 24px", border: `1px solid ${B}`, textAlign: "center", transition: "transform 0.2s, box-shadow 0.2s" }} onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-5px)"; e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.05)"; }} onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
+            <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "24px 16px", border: `1px solid ${B}`, textAlign: "center", transition: "transform 0.2s, box-shadow 0.2s" }} onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-5px)"; e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.05)"; }} onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
               <div style={{ color: R, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
                 {b.icon}
               </div>
@@ -527,7 +659,7 @@ export default function BMCPLanding() {
 
       {/* ===== 3. VENUE CARDS ===== */}
       <Sec id="venues">
-        <div style={{ textAlign: "center", marginBottom: 50 }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
           <Badge text="Explore venue types" />
           <h2 style={{ fontFamily: "var(--font-playfair), serif", fontSize: 32, margin: "14px 0 8px" }}>
             Corporate Party Venues in <span style={{ color: R }}>Mumbai</span>
@@ -552,7 +684,7 @@ export default function BMCPLanding() {
             From Enquiry to Event in <span style={{ color: R }}>5 Steps</span>
           </h2>
         </div>
-        <div style={{ position: "relative", maxWidth: 1060, margin: "0 auto" }}>
+        <div style={{ position: "relative", width: "100%" }}>
           {/* Connecting Line (Dashed) */}
           <div className="steps-line" style={{ position: "absolute", top: 26, left: "10%", right: "10%", height: 0, borderTop: `2px dashed ${B}`, zIndex: 0 }} />
           
@@ -583,7 +715,7 @@ export default function BMCPLanding() {
           <h2 style={{ fontFamily: "var(--font-playfair), serif", fontSize: 32, margin: "10px 0 0" }}>Why HRs Prefer Our <span style={{ color: R }}>Streamlined</span> Process</h2>
         </div>
         
-        <div className="comparison-board" style={{ maxWidth: 1060, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: 30 }}>
+        <div className="comparison-board" style={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: 30 }}>
           {/* THE OLD WAY */}
           <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${B}`, padding: "40px", position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: "#E5E7EB" }} />
@@ -668,7 +800,7 @@ export default function BMCPLanding() {
           <Badge text="The Choice" />
           <h2 style={{ fontFamily: "var(--font-playfair), serif", fontSize: 32, margin: "10px 0 0" }}>BookMyCorporateParty vs Others</h2>
         </div>
-        <div className="table-scroll-wrap" style={{ maxWidth: 900, margin: "0 auto", borderRadius: 16, overflow: "hidden", border: `1px solid ${B}`, boxShadow: "0 10px 40px rgba(0,0,0,0.03)" }}>
+        <div className="table-scroll-wrap" style={{ width: "100%", borderRadius: 16, overflow: "hidden", border: `1px solid ${B}`, boxShadow: "0 10px 40px rgba(0,0,0,0.03)" }}>
           {/* Header Row */}
           <div className="table-header-row" style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 1.5fr", background: D, color: "#fff", fontWeight: 800, fontSize: 13, textTransform: "uppercase", letterSpacing: "1px" }}>
             <div style={{ padding: "20px 24px" }}>Platform Focus</div>
@@ -714,7 +846,7 @@ export default function BMCPLanding() {
           <Badge text="FAQ" />
           <h2 style={{ fontFamily: "var(--font-playfair), serif", fontSize: 28, margin: "10px 0 0" }}>Frequently Asked Questions</h2>
         </div>
-        <div style={{ maxWidth: 700, margin: "0 auto" }}>
+        <div style={{ width: "100%" }}>
           <FAQItem q="Is there any charge for using BookMyCorporateParty?" a="No. Our service is completely free for HR and Admin teams. We earn through venue partnerships — you pay the venue directly. No middleman markup on your bill." />
           <FAQItem q="How fast can I finalize a corporate party venue in Mumbai?" a="In most cases, you can finalize within 30 minutes after reviewing our shortlisted options. For last-minute or urgent bookings, we provide priority support — subject to venue availability." />
           <FAQItem q="What types of corporate events can I book?" a="Annual office parties, team outings, R&R events, corporate offsites, Diwali and Christmas celebrations, award nights, client entertainment, product launches, startup celebrations, farewell get-togethers, and leadership retreats. If it's a corporate occasion, we cover it." />
@@ -726,8 +858,8 @@ export default function BMCPLanding() {
       </Sec>
 
       {/* ===== 9. FINAL CTA (DIAMOND WHITE) ===== */}
-      <section className="cta-section" style={{ background: "#fff", padding: "80px 24px", textAlign: "center", position: "relative", borderTop: `1px solid ${B}` }}>
-        <div style={{ maxWidth: 840, margin: "0 auto", position: "relative", zIndex: 1 }}>
+      <section className="cta-section" style={{ background: "#fff", padding: "60px clamp(100px, 8vw, 200px)", textAlign: "center", position: "relative", borderTop: `1px solid ${B}` }}>
+        <div style={{ width: "100%", position: "relative", zIndex: 1 }}>
           <div style={{ display: "inline-block", background: L, padding: "7px 18px", borderRadius: 30, color: R, fontSize: 11, fontWeight: 800, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 26, border: `1px solid ${B}` }}>
             The Mumbai Corporate Choice
           </div>
@@ -757,7 +889,7 @@ export default function BMCPLanding() {
 
       {/* ===== 10. EXECUTIVE FOOTER (BRAND RED THEME) ===== */}
       <footer style={{ background: R, padding: "80px 0 40px" }}>
-        <div style={{ maxWidth: 1140, margin: "0 auto", padding: "0 24px" }}>
+        <div style={{ width: "100%", padding: "0 clamp(100px, 8vw, 200px)", boxSizing: "border-box" }}>
           <div className="footer-cols" style={{ display: "flex", gap: 60, flexWrap: "wrap", marginBottom: 60 }}>
             {/* Logo & About */}
             <div style={{ flex: "2 1 300px" }}>
