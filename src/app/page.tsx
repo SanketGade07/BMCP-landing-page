@@ -24,7 +24,7 @@ function useFadeIn() {
 const Sec = ({ children, bg = "transparent", id, style }: { children: React.ReactNode; bg?: string; id?: string, style?: any }) => {
   const f = useFadeIn();
   return (
-    <section ref={f.ref as React.RefObject<HTMLElement>} id={id} style={{ ...f.style, background: bg, padding: "50px 24px", ...style }}>
+    <section ref={f.ref as React.RefObject<HTMLElement>} id={id} className="section-pad" style={{ ...f.style, background: bg, padding: "50px 24px", ...style }}>
       <div style={{ maxWidth: 1140, margin: "0 auto" }}>{children}</div>
     </section>
   );
@@ -100,6 +100,7 @@ function VenueCard({ v }: { v: Venue }) {
 
 export default function BMCPLanding() {
   const [formData, setFormData] = useState({ event: "", location: "", date: "", whatsapp: true });
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const venues: Venue[] = [
     { name: "Lounges & Clubs", img: "/images/687e0608c0d8f.jpg", tags: ["DJ & Music", "Bar Setup"], desc: "High-energy venues with DJ, bar, and dance floor — ideal for team parties, R&R nights, and celebrations.", capacity: "30–150 guests" },
@@ -112,6 +113,233 @@ export default function BMCPLanding() {
 
   return (
     <div style={{ fontFamily: "var(--font-dm-sans), sans-serif", color: D, overflowX: "hidden" }}>
+      <style>{`
+        .hamburger-btn { display: none; }
+        @media (max-width: 768px) {
+          .nav-links, .nav-actions { display: none !important; }
+          .hamburger-btn { display: flex !important; }
+          .section-pad { padding: 36px 16px !important; }
+          .hero-section { padding: 40px 0 50px !important; }
+          .hero-container { gap: 28px !important; }
+          .hero-badges { flex-wrap: wrap !important; gap: 10px !important; }
+
+          /* Why Choose Us - 2 column grid */
+          .features-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
+          }
+          .features-grid > div {
+            padding: 20px 16px !important;
+          }
+
+          .venue-grid {
+            display: flex !important;
+            overflow-x: auto !important;
+            scroll-snap-type: x mandatory !important;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 12px !important;
+            scrollbar-width: none;
+          }
+          .venue-grid::-webkit-scrollbar { display: none; }
+          .venue-grid > * {
+            min-width: 280px !important;
+            max-width: 300px !important;
+            flex-shrink: 0 !important;
+            scroll-snap-align: start !important;
+          }
+
+          /* Steps - zigzag grid: [1][2] / [4][3] / [5] */
+          .steps-line { display: none !important; }
+          .steps-container {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 16px !important;
+            position: relative !important;
+          }
+          .steps-container > div {
+            flex-basis: auto !important;
+            max-width: none !important;
+            background: #fff;
+            border-radius: 14px;
+            padding: 24px 16px;
+            border: 1px solid #E5E7EB;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            position: relative;
+          }
+          /* Swap 3 and 4 for zigzag */
+          .steps-container > div:nth-child(3) { order: 2 !important; }
+          .steps-container > div:nth-child(4) { order: 1 !important; }
+          .steps-container > div:last-child {
+            grid-column: 1 / -1;
+            max-width: 50%;
+            margin: 0 auto;
+            order: 3 !important;
+          }
+          /* 1→2: horizontal right */
+          .steps-container > div:nth-child(1)::after {
+            content: '';
+            position: absolute;
+            top: 38px;
+            right: -16px;
+            width: 16px;
+            border-top: 2px dashed #D1D5DB;
+            z-index: 2;
+          }
+          /* 2→3: vertical down (right side) */
+          .steps-container > div:nth-child(2)::after {
+            content: '';
+            position: absolute;
+            bottom: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 16px;
+            border-left: 2px dashed #D1D5DB;
+            z-index: 2;
+          }
+          /* 3→4: horizontal left (3 is on right visually) */
+          .steps-container > div:nth-child(3)::after {
+            content: '';
+            position: absolute;
+            top: 38px;
+            left: -16px;
+            width: 16px;
+            border-top: 2px dashed #D1D5DB;
+            z-index: 2;
+          }
+          /* 4→5: vertical down (4 is on left visually) */
+          .steps-container > div:nth-child(4)::after {
+            content: '';
+            position: absolute;
+            bottom: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 16px;
+            border-left: 2px dashed #D1D5DB;
+            z-index: 2;
+          }
+
+          /* Comparison Board */
+          .comparison-board {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
+          .comparison-board > div {
+            padding: 28px 20px !important;
+          }
+
+          .testimonials-row {
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            justify-content: flex-start !important;
+            scroll-snap-type: x mandatory !important;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 12px !important;
+            scrollbar-width: none;
+          }
+          .testimonials-row::-webkit-scrollbar { display: none; }
+          .testimonials-row > div {
+            min-width: 300px !important;
+            max-width: 320px !important;
+            flex-shrink: 0 !important;
+            scroll-snap-align: start !important;
+          }
+
+          /* Comparison Table - compact 3-col on mobile */
+          .table-scroll-wrap {
+            overflow: hidden !important;
+            border: 1px solid #E5E7EB !important;
+            border-radius: 14px !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+          }
+          .table-header-row {
+            grid-template-columns: 0.9fr 1fr 1fr !important;
+            font-size: 9px !important;
+            letter-spacing: 0.5px !important;
+          }
+          .table-header-row > div {
+            padding: 12px 8px !important;
+          }
+          .table-data-row {
+            grid-template-columns: 0.9fr 1fr 1fr !important;
+            margin-bottom: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+          }
+          .table-data-row > div:first-child {
+            padding: 10px 8px !important;
+            font-size: 11px !important;
+            border: none !important;
+          }
+          .table-data-row > div:nth-child(2) {
+            padding: 10px 8px !important;
+            font-size: 11px !important;
+            border-left: 1px solid #F0F0F0 !important;
+            border-right: 1px solid #F0F0F0 !important;
+          }
+          .table-data-row > div:nth-child(3) {
+            padding: 10px 8px !important;
+            font-size: 11px !important;
+          }
+          .table-data-row > div:nth-child(2) svg,
+          .table-data-row > div:nth-child(3) svg {
+            width: 14px !important;
+            height: 14px !important;
+          }
+
+          /* CTA section */
+          .cta-section {
+            padding: 50px 16px !important;
+          }
+          .cta-section h2 {
+            font-size: clamp(26px, 7vw, 34px) !important;
+            line-height: 1.2 !important;
+            margin-bottom: 16px !important;
+          }
+          .cta-section h2 br { display: none; }
+          .cta-section .cta-subtitle {
+            font-size: 15px !important;
+            margin-bottom: 28px !important;
+          }
+          .cta-section .cta-subtitle br { display: none; }
+          .cta-section button {
+            padding: 16px 32px !important;
+            font-size: 15px !important;
+            border-radius: 10px !important;
+            width: 100% !important;
+            max-width: 340px !important;
+          }
+          .cta-section .cta-trust {
+            flex-direction: row !important;
+            gap: 20px !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+          }
+
+          .footer-cols { gap: 32px !important; }
+          .footer-cols > div:first-child { flex-basis: 100% !important; }
+          .footer-cols > div:not(:first-child) { flex: 1 1 42% !important; min-width: 130px !important; }
+          .footer-bottom-bar {
+            flex-direction: column !important;
+            text-align: center !important;
+            gap: 16px !important;
+          }
+          .footer-bottom-bar > div { justify-content: center !important; }
+          .whatsapp-fab {
+            bottom: 20px !important;
+            right: 20px !important;
+            width: 54px !important;
+            height: 54px !important;
+          }
+        }
+        @keyframes mobileMenuSlide {
+          from { opacity: 0; transform: translateY(-100%); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes mobileMenuFade {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
 
       {/* NAV */}
       <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(255,255,255,0.97)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${B}`, padding: "12px 24px" }}>
@@ -136,19 +364,46 @@ export default function BMCPLanding() {
                 <a key={link.href} href={link.href} style={{ fontSize: 13, fontWeight: 600, color: D, textDecoration: "none", transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = R} onMouseLeave={e => e.currentTarget.style.color = D}>{link.name}</a>
               ))}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div className="nav-actions" style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <div style={{ color: R, display: "flex", alignItems: "center" }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
               </div>
               <a href="tel:+919333749333" style={{ fontSize: 13.5, color: D, textDecoration: "none", fontWeight: 700, letterSpacing: "0.2px" }}>+91 9333 74 9333</a>
             </div>
-            <button style={{ background: R, color: "#fff", border: "none", borderRadius: 7, padding: "10px 22px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Get Started →</button>
+            <button className="nav-actions" style={{ background: R, color: "#fff", border: "none", borderRadius: 7, padding: "10px 22px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Get Started →</button>
+            <button className="hamburger-btn" onClick={() => setMenuOpen(!menuOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 8, flexDirection: "column", gap: 5, alignItems: "center", justifyContent: "center" }}>
+              <span style={{ display: "block", width: 22, height: 2, background: D, borderRadius: 2, transition: "all 0.3s", transform: menuOpen ? "rotate(45deg) translate(5px, 5px)" : "none" }} />
+              <span style={{ display: "block", width: 22, height: 2, background: D, borderRadius: 2, transition: "all 0.3s", opacity: menuOpen ? 0 : 1 }} />
+              <span style={{ display: "block", width: 22, height: 2, background: D, borderRadius: 2, transition: "all 0.3s", transform: menuOpen ? "rotate(-45deg) translate(5px, -5px)" : "none" }} />
+            </button>
           </div>
         </div>
       </nav>
 
+      {/* MOBILE MENU OVERLAY */}
+      {menuOpen && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "#fff", zIndex: 150, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "mobileMenuSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1)" }}>
+          <button onClick={() => setMenuOpen(false)} style={{ position: "absolute", top: 20, right: 24, background: "none", border: "none", fontSize: 32, cursor: "pointer", color: D, fontWeight: 300 }}>✕</button>
+          {[
+            { name: "Why Us", href: "#why-us" },
+            { name: "Venues", href: "#venues" },
+            { name: "Process", href: "#how-it-works" },
+            { name: "FAQ", href: "#faq" }
+          ].map((link, i) => (
+            <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)} style={{ fontSize: 28, fontWeight: 700, color: D, textDecoration: "none", padding: "24px 0", width: "80%", textAlign: "center", borderBottom: `1px solid ${B}`, animation: `mobileMenuFade 0.5s ${0.1 * (i + 1)}s both`, fontFamily: "var(--font-playfair), serif" }}>{link.name}</a>
+          ))}
+          <div style={{ marginTop: 48, animation: "mobileMenuFade 0.5s 0.5s both" }}>
+            <button onClick={() => setMenuOpen(false)} style={{ background: R, color: "#fff", border: "none", borderRadius: 12, padding: "18px 52px", fontSize: 17, fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-dm-sans), sans-serif" }}>Get Started →</button>
+          </div>
+          <a href="tel:+919333749333" style={{ marginTop: 28, fontSize: 16, color: G, textDecoration: "none", animation: "mobileMenuFade 0.5s 0.6s both", display: "flex", alignItems: "center", gap: 8 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={R} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            +91 9333 74 9333
+          </a>
+        </div>
+      )}
+
       {/* ===== 1. HERO + FORM ===== */}
-      <section style={{
+      <section className="hero-section" style={{
         background: `linear-gradient(RGBA(0, 0, 0, 0.4), RGBA(0, 0, 0, 0.4)), url('/images/home_banner.png')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
@@ -157,7 +412,7 @@ export default function BMCPLanding() {
         overflow: "hidden"
       }}>
         <div style={{ position: "absolute", top: -120, right: -80, width: 420, height: 420, background: `radial-gradient(circle, rgba(192,57,43,0.12) 0%, transparent 70%)`, borderRadius: "50%" }} />
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px", display: "flex", gap: 48, alignItems: "center", flexWrap: "wrap" }}>
+        <div className="hero-container" style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px", display: "flex", gap: 48, alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ flex: "1 1 520px" }}>
             <Badge text="Mumbai's #1 Corporate Party Platform" />
             <h1 style={{ fontFamily: "var(--font-playfair), serif", fontSize: "clamp(30px, 4.5vw, 46px)", fontWeight: 700, color: "#fff", lineHeight: 1.18, margin: "18px 0 14px" }}>
@@ -167,7 +422,7 @@ export default function BMCPLanding() {
             <p style={{ fontSize: 17, color: "#E0E0E0", lineHeight: 1.65, margin: "0 0 28px", maxWidth: 500 }}>
               Tell us your team size, budget, and date. We shortlist the best lounges, banquets, and party venues in Mumbai — so you don't have to call 20 places.
             </p>
-            <div style={{ display: "flex", gap: 18, marginTop: 24, alignItems: "center" }}>
+            <div className="hero-badges" style={{ display: "flex", gap: 18, marginTop: 24, alignItems: "center" }}>
               {[
                 { label: "500+ Companies", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> },
                 { label: "30-Min Turnaround", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> },
@@ -215,7 +470,7 @@ export default function BMCPLanding() {
           <h2 style={{ fontFamily: "var(--font-playfair), serif", fontSize: 30, margin: "0 0 8px" }}>Why HR Teams Choose <span style={{ color: R }}>BookMyCorporateParty</span></h2>
           <p style={{ fontSize: 15, color: G, maxWidth: 480, margin: "0 auto" }}>Corporate-only. Curated. Handled end-to-end.</p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
+        <div className="features-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
           {[
             { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>, title: "100% Corporate Focus", desc: "Not a wedding directory. Every venue vetted for office events." },
             { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>, title: "30-Minute Turnaround", desc: "Get 3–5 handpicked venues with pricing in 30 minutes." },
@@ -267,7 +522,7 @@ export default function BMCPLanding() {
             Choose your venue type and submit your requirements. We'll shortlist the best options for your team.
           </p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 22 }}>
+        <div className="venue-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 22 }}>
           {venues.map((v, i) => <VenueCard key={i} v={v} />)}
         </div>
         <p style={{ textAlign: "center", color: G, fontSize: 13, marginTop: 28 }}>
@@ -285,9 +540,9 @@ export default function BMCPLanding() {
         </div>
         <div style={{ position: "relative", maxWidth: 1060, margin: "0 auto" }}>
           {/* Connecting Line (Dashed) */}
-          <div style={{ position: "absolute", top: 26, left: "10%", right: "10%", height: 0, borderTop: `2px dashed ${B}`, zIndex: 0 }} />
+          <div className="steps-line" style={{ position: "absolute", top: 26, left: "10%", right: "10%", height: 0, borderTop: `2px dashed ${B}`, zIndex: 0 }} />
           
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 24, flexWrap: "wrap", position: "relative", zIndex: 1 }}>
+          <div className="steps-container" style={{ display: "flex", justifyContent: "space-between", gap: 24, flexWrap: "wrap", position: "relative", zIndex: 1 }}>
             {[
               { t: "Share Details", d: "Event type, area, guest count, date, budget." },
               { t: "We Shortlist", d: "3–5 handpicked Mumbai venues, vetted for corporate." },
@@ -314,7 +569,7 @@ export default function BMCPLanding() {
           <h2 style={{ fontFamily: "var(--font-playfair), serif", fontSize: 32, margin: "10px 0 0" }}>Why HRs Prefer Our <span style={{ color: R }}>Streamlined</span> Process</h2>
         </div>
         
-        <div style={{ maxWidth: 1060, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: 30 }}>
+        <div className="comparison-board" style={{ maxWidth: 1060, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: 30 }}>
           {/* THE OLD WAY */}
           <div style={{ background: "#fff", borderRadius: 16, border: `1px solid ${B}`, padding: "40px", position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: "#E5E7EB" }} />
@@ -369,7 +624,7 @@ export default function BMCPLanding() {
           <Badge text="Reviews" />
           <h2 style={{ fontFamily: "var(--font-playfair), serif", fontSize: 32, margin: "10px 0 0" }}>Trusted by <span style={{ color: R }}>500+ Companies</span></h2>
         </div>
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap", justifyContent: "center" }}>
+        <div className="testimonials-row" style={{ display: "flex", gap: 20, flexWrap: "wrap", justifyContent: "center" }}>
           {[
             { q: "We needed a lounge in Andheri for 80 people with DJ and bar. BMCP sent 5 options the same day. Finalized in one call.", n: "Priya S.", r: "HR Manager, SaaS Company", a: "Andheri" },
             { q: "Our annual party used to take 3 weeks. This year — 3 days. They handled venue, food, DJ, everything.", n: "Rohan M.", r: "Admin Lead, Fintech Startup", a: "Navi Mumbai" },
@@ -399,9 +654,9 @@ export default function BMCPLanding() {
           <Badge text="The Choice" />
           <h2 style={{ fontFamily: "var(--font-playfair), serif", fontSize: 32, margin: "10px 0 0" }}>BookMyCorporateParty vs Others</h2>
         </div>
-        <div style={{ maxWidth: 900, margin: "0 auto", borderRadius: 16, overflow: "hidden", border: `1px solid ${B}`, boxShadow: "0 10px 40px rgba(0,0,0,0.03)" }}>
+        <div className="table-scroll-wrap" style={{ maxWidth: 900, margin: "0 auto", borderRadius: 16, overflow: "hidden", border: `1px solid ${B}`, boxShadow: "0 10px 40px rgba(0,0,0,0.03)" }}>
           {/* Header Row */}
-          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 1.5fr", background: D, color: "#fff", fontWeight: 800, fontSize: 13, textTransform: "uppercase", letterSpacing: "1px" }}>
+          <div className="table-header-row" style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 1.5fr", background: D, color: "#fff", fontWeight: 800, fontSize: 13, textTransform: "uppercase", letterSpacing: "1px" }}>
             <div style={{ padding: "20px 24px" }}>Platform Focus</div>
             <div style={{ padding: "20px 24px", background: "rgba(255,255,255,0.05)", textAlign: "center", color: "#fff" }}>BookMyCorporateParty</div>
             <div style={{ padding: "20px 24px", textAlign: "center", opacity: 0.6 }}>Other Sites</div>
@@ -416,7 +671,7 @@ export default function BMCPLanding() {
             ["Last-Minute Booking", "Dedicated priority support", "No dedicated support team"],
             ["Site Inspection", "Arranged & coordinated", "Self-service only"],
           ].map(([feat, ours, theirs], i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 1.5fr", background: i % 2 === 0 ? "#fff" : "#FAFAFA", borderBottom: i === 6 ? "none" : `1px solid ${B}` }}>
+            <div key={i} className="table-data-row" style={{ display: "grid", gridTemplateColumns: "1.2fr 1.5fr 1.5fr", background: i % 2 === 0 ? "#fff" : "#FAFAFA", borderBottom: i === 6 ? "none" : `1px solid ${B}` }}>
               <div style={{ padding: "16px 24px", fontWeight: 600, fontSize: 14, color: D, display: "flex", alignItems: "center" }}>{feat}</div>
               
               {/* Our Column */}
@@ -457,7 +712,7 @@ export default function BMCPLanding() {
       </Sec>
 
       {/* ===== 9. FINAL CTA (DIAMOND WHITE) ===== */}
-      <section style={{ background: "#fff", padding: "80px 24px", textAlign: "center", position: "relative", borderTop: `1px solid ${B}` }}>
+      <section className="cta-section" style={{ background: "#fff", padding: "80px 24px", textAlign: "center", position: "relative", borderTop: `1px solid ${B}` }}>
         <div style={{ maxWidth: 840, margin: "0 auto", position: "relative", zIndex: 1 }}>
           <div style={{ display: "inline-block", background: L, padding: "7px 18px", borderRadius: 30, color: R, fontSize: 11, fontWeight: 800, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 26, border: `1px solid ${B}` }}>
             The Mumbai Corporate Choice
@@ -466,7 +721,7 @@ export default function BMCPLanding() {
             Your Team Deserves a Great Party.<br />
             <span style={{ color: R }}>You Deserve an Easy Booking.</span>
           </h2>
-          <p style={{ fontSize: 18, color: G, margin: "0 auto 40px", lineHeight: 1.7, maxWidth: 640 }}>
+          <p className="cta-subtitle" style={{ fontSize: 18, color: G, margin: "0 auto 40px", lineHeight: 1.7, maxWidth: 640 }}>
             One enquiry. Curated Mumbai venues. Real pricing. <br />
             Shortlist and finalize everything in 30 minutes.
           </p>
@@ -479,7 +734,7 @@ export default function BMCPLanding() {
             Takes 60 seconds. Free for HR & Admin teams. No obligations.
           </p>
 
-          <div style={{ color: G, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 30, marginTop: 12 }}>
+          <div className="cta-trust" style={{ color: G, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 30, marginTop: 12 }}>
             <span style={{ display: "flex", alignItems: "center", gap: 8 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 100% Free Service</span>
             <span style={{ display: "flex", alignItems: "center", gap: 8 }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Trusted by 500+ HRs</span>
           </div>
@@ -489,7 +744,7 @@ export default function BMCPLanding() {
       {/* ===== 10. EXECUTIVE FOOTER (BRAND RED THEME) ===== */}
       <footer style={{ background: R, padding: "80px 0 40px" }}>
         <div style={{ maxWidth: 1140, margin: "0 auto", padding: "0 24px" }}>
-          <div style={{ display: "flex", gap: 60, flexWrap: "wrap", marginBottom: 60 }}>
+          <div className="footer-cols" style={{ display: "flex", gap: 60, flexWrap: "wrap", marginBottom: 60 }}>
             {/* Logo & About */}
             <div style={{ flex: "2 1 300px" }}>
               <div style={{ marginBottom: 24 }}>
@@ -546,7 +801,7 @@ export default function BMCPLanding() {
             </div>
           </div>
 
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.15)", paddingTop: 30, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 20 }}>
+          <div className="footer-bottom-bar" style={{ borderTop: "1px solid rgba(255,255,255,0.15)", paddingTop: 30, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 20 }}>
             <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, margin: 0 }}>
               © 2026 BookMyCorporateParty. All rights reserved.
             </p>
@@ -560,7 +815,7 @@ export default function BMCPLanding() {
       </footer>
 
       {/* ===== FLOATING VIP CONCIERGE (WHATSAPP) ===== */}
-      <a href="https://wa.me/919333749333" target="_blank" rel="noopener noreferrer" style={{ position: "fixed", bottom: 32, right: 32, width: 64, height: 64, background: "#25D366", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 10px 30px rgba(37,211,102,0.45)", zIndex: 1000, transition: "transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)" }} onMouseEnter={e => e.currentTarget.style.transform = "scale(1.15) rotate(8deg)"} onMouseLeave={e => e.currentTarget.style.transform = "none"}>
+      <a href="https://wa.me/919333749333" target="_blank" rel="noopener noreferrer" className="whatsapp-fab" style={{ position: "fixed", bottom: 32, right: 32, width: 64, height: 64, background: "#25D366", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 10px 30px rgba(37,211,102,0.45)", zIndex: 1000, transition: "transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)" }} onMouseEnter={e => e.currentTarget.style.transform = "scale(1.15) rotate(8deg)"} onMouseLeave={e => e.currentTarget.style.transform = "none"}>
         <svg width="34" height="34" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.414 0 .004 5.408 0 12.044c0 2.123.555 4.197 1.608 6.02L0 24l6.128-1.608a11.847 11.847 0 0 0 5.922 1.583h.005c6.637 0 12.046-5.41 12.051-12.048a11.82 11.82 0 0 0-3.526-8.528"></path></svg>
       </a>
     </div>
